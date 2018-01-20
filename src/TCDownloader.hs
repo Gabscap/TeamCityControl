@@ -38,7 +38,7 @@ data Config = Config { username   :: T.Text
                      , password   :: T.Text
                      , baseUrl    :: String
                      , manager    :: Manager
-                     , project     :: T.Text
+                     , project    :: T.Text
                      , build      :: Maybe T.Text
                      , debug      :: Bool
                      , targetDir' :: FilePath
@@ -57,7 +57,7 @@ freshConfig FileConfig{..} project build oDebug = do
 mainProgram :: TCM IO ()
 mainProgram = do
     dbg "REST: List Projects"
-    projects     <- listProjects
+    projects      <- listProjects
     searchProject <- asks project
     let project   = find (\p -> (TC.name (p :: TC.Project)) == searchProject) $ TC.project projects
     when (isNothing project) $ quitError "This project does not exist"
