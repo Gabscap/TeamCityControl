@@ -32,7 +32,7 @@ instance FromJSON FileConfig
 
 readFileConfig :: Maybe String -> IO FileConfig
 readFileConfig configOverride = do
-    configs <- filterM doesFileExist =<< getAllConfigFiles "TCD" "config.yml"
+    configs <- filterM doesFileExist =<< getAllConfigFiles "tccontrol" "config.yml"
     config  <- maybe (quitError "No config found") return $ configOverride <|> headMay configs
 
     either throwM return =<< Yaml.decodeFileEither config

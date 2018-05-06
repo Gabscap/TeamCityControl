@@ -37,7 +37,7 @@ tccontrol --bash-completion-script $(which tccontrol) > /path/to/bash_completion
 
 ## Config
 
-This program searches for configs in `XDG_CONFIG_DIR/TCD/config.yml` (typically `$HOME/.config/TCD/config.yml`).
+This program searches for configs in `XDG_CONFIG_DIR/TCControl/config.yml` (typically `$HOME/.config/TCControl/config.yml`).
 ```
 tcUrl: https://teamcityUrl/
 user: username
