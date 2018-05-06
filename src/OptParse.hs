@@ -23,7 +23,7 @@ data Options =
 
 
 parseCLI :: Completer -> IO Options
-parseCLI projectCompleter = execParser (withInfo (parseOptions projectCompleter) "TeamCityDownloader")
+parseCLI projectCompleter = execParser (withInfo (parseOptions projectCompleter) "tccontrol")
     where withInfo opts h = info (helper <*> opts) $ header h
 
 parseOptions :: Completer -> Parser Options

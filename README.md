@@ -1,6 +1,6 @@
-# TeamCityDownloader
+# TeamCityControl
 
-TeamCityDownloader downloads Artifacts from [TeamCity CI](https://www.jetbrains.com/teamcity/).
+TeamCityControl downloads Artifacts from [TeamCity CI](https://www.jetbrains.com/teamcity/).
 
 ## Installation
 Install [Stack](https://www.haskellstack.org/), then
@@ -11,22 +11,27 @@ stack build
 ## Usage
 
 ```
-TeamCityDownloader
+tccontrol
 
-Usage: TeamCityDownloader [-c|--config PATH] [-d|--debug] PROJECT [BUILD]
+Usage: tccontrol [-c|--config PATH] [-v|--verbose] COMMAND
 
 Available options:
   -h,--help                Show this help text
   -c,--config PATH         Path to config yml file
-  -d,--debug               Debug mode
-  PROJECT                  Name of project
-  BUILD                    Build number
+  -v,--verbose             Verbose mode
 
+Available commands:
+  list                     List all projects
+  ls                       List all projects
+  download                 Download project
+  dl                       Download project
+  build                    Build project
 ```
+Use `tccontrol SUBCOMMAND -h` for further information.
 
 This command sets up autocompletion
 ```
-TeamCityDownloader --bash-completion-script $(which TeamCityDownloader) > /path/to/bash_completion.d/TeamCityDownloader
+tccontrol --bash-completion-script $(which tccontrol) > /path/to/bash_completion.d/tccontrol
 ```
 `/path/to/bash_completion.d/` is distribution dependent, but usually `/etc/bash_completion.d/`.
 
