@@ -132,7 +132,7 @@ auth request = do
             return $ applyBasicAuth user pass req
         Just cookies -> return req{ cookieJar = Just cookies }
 
-data JsonDecodeException = JsonDecodeException String
+newtype JsonDecodeException = JsonDecodeException String
 instance Show JsonDecodeException where
     show (JsonDecodeException msg) = "JsonDecodeException: " ++ msg
 instance Exception JsonDecodeException
@@ -198,7 +198,7 @@ data File =
     deriving (Show, Generic)
 instance FromJSON File
 
-data Href =
+newtype Href =
     Href { href :: T.Text }
     deriving (Show, Generic)
 instance FromJSON Href

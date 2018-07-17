@@ -8,7 +8,7 @@ version:             0.1.0.0
 license:             BSD3
 license-file:        LICENSE
 author:              Gabscap
-maintainer:          sonstige.netzwerke@gabriel-paradzik.de
+maintainer:          git@gabscap.de
 -- copyright:           
 -- category:            
 build-type:          Simple

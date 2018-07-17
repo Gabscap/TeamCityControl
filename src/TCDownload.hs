@@ -35,7 +35,8 @@ data DownloadConfig =
                    , baseUrl    :: String
                    , manager    :: Manager
                    , project    :: T.Text
-                   , build      :: Maybe T.Text
+                   , buildNo    :: Maybe T.Text
+                   , buildType  :: Maybe T.Text
                    , debug      :: Bool
                    , targetDir' :: FilePath
                    , excepts'   :: M.Map T.Text FilePath }
@@ -43,10 +44,10 @@ data DownloadConfig =
 runTCMDL :: TCMDL IO a -> DownloadConfig -> IO a
 runTCMDL tcm config = evalStateT (runReaderT tcm config) Nothing
 
-freshConfig :: FileConfig -> T.Text -> Maybe T.Text -> Bool -> IO DownloadConfig
-freshConfig FileConfig{..} project build oDebug = do
+freshConfig :: FileConfig -> T.Text -> Maybe T.Text -> Maybe T.Text -> Bool -> IO DownloadConfig
+freshConfig FileConfig{..} project buildNo buildType oDebug = do
     manager <- newManager tlsManagerSettings
-    return $ DownloadConfig user pass tcUrl manager project build oDebug targetDir excepts
+    return $ DownloadConfig user pass tcUrl manager project buildNo buildType oDebug targetDir excepts
 
 tcDownload :: DownloadConfig -> IO ()
 tcDownload = runTCMDL tcDownloadM
@@ -56,20 +57,19 @@ tcDownloadM = do
     dbg "REST: List Projects"
     projects      <- liftDL TC.listProjects
     searchProject <- asks project
-    let project   = find (\p -> (TC.name (p :: TC.Project)) == searchProject) $ TC.project projects
+    let project   = find (\p -> TC.name (p :: TC.Project) == searchProject) $ TC.project projects
     when (isNothing project) $ quitError "This project does not exist"
     let project'  = fromJust project
 
     dbg "REST: Project Info"
     pInfoRes       <- liftDL $ TC.restGetJson' (T.unpack $ TC.href (project' :: TC.Project)) :: TCMDL IO TC.ProjectInfo
     let buildTypes  = TC.buildType . TC.buildTypes $ pInfoRes
-    when (length buildTypes == 0) $ quitError "This project has no build configuration"
-    when (length buildTypes >= 2) $ quitError "This project has more than one build configuration"
-    let buildTypeId = TC.id (head buildTypes :: TC.BuildType)
+    selBuildType   <- buildTypeSelector buildTypes
+    let buildTypeId = TC.id (selBuildType :: TC.BuildType)
 
     let buildsUrl   = "buildTypes/id:" ++ T.unpack buildTypeId ++ "/builds"
     buildsRes      <- liftDL $ TC.restGetJson buildsUrl :: TCMDL IO TC.Builds
-    build          <- buildSelector $ TC.build (buildsRes :: TC.Builds)
+    build          <- buildNoSelector $ TC.build (buildsRes :: TC.Builds)
     let buildStatus = T.unpack $ TC.status build
     when (buildStatus /= "SUCCESS") $ quitError $ "This build was not successful" ++ buildStatus
     let buildNumber = TC.number build
@@ -82,7 +82,7 @@ tcDownloadM = do
     artifacts      <- liftDL $ TC.getArtifacts artifactUrl
 
     targetDir <- getTargetDir searchProject
-    forM artifacts $ uncurry (downloadArtifact artifactUrl targetDir)
+    forM_ artifacts $ uncurry (downloadArtifact artifactUrl targetDir)
     dbg $ show artifacts
     liftIO . T.putStrLn $ "Downloaded "
                        <> searchProject
@@ -106,9 +106,24 @@ getTargetDir filename = do
     DownloadConfig{..} <- ask
     return $ M.findWithDefault targetDir' filename excepts'
 
-buildSelector :: MonadIO m => [TC.Build] -> TCMDL m TC.Build
-buildSelector builds = do
-    buildNr <- asks build
+buildTypeSelector :: MonadIO m => [TC.BuildType] -> TCMDL m TC.BuildType
+buildTypeSelector buildTypes = do
+    when (null buildTypes) $ quitError "This project has no build configuration"
+    asks buildType >>= \case
+        Nothing ->
+            case buildTypes of
+                [x] -> return x
+                _   -> local (\r -> r{ buildType = Just "Build" }) $ buildTypeSelector buildTypes
+        Just search ->
+            case find (buildTypeIs search) buildTypes of
+                Nothing -> quitError $ "This project has no build configuration " <> T.unpack search
+                Just bc -> return bc
+  where buildTypeIs :: T.Text -> TC.BuildType -> Bool
+        buildTypeIs name = (== name) . (TC.name :: TC.BuildType -> T.Text)
+
+buildNoSelector :: MonadIO m => [TC.Build] -> TCMDL m TC.Build
+buildNoSelector builds = do
+    buildNr <- asks buildNo
     case buildNr of
         Nothing -> do
             let successBuilds = filter ((== "SUCCESS") . TC.status) builds

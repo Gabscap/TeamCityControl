@@ -24,7 +24,7 @@ main = do
 
     case oAction of
         Download DownloadInfo{..} -> do
-            config <- freshConfig fc (T.pack oProject) (T.pack <$> oBuild) oDebug
+            config <- freshConfig fc (T.pack oProject) (T.pack <$> oBuildNo) (T.pack <$> oBuildType) oDebug
             tcDownload config
         List -> do
             config <- TC.freshConfig fc oDebug
@@ -39,6 +39,6 @@ projectNameCompleter = mkCompleter $ \search -> do
 
     config <- TC.freshConfig fc False
 
-    names <- (TC.runTCMRest TC.listProjectNames config)
+    names <- TC.runTCMRest TC.listProjectNames config
         `catch` (\(_ :: SomeException) -> return [])
     return . filter (isPrefixOf search) $ T.unpack <$> names

@@ -11,8 +11,9 @@ data Action
   deriving (Show)
 
 data DownloadInfo =
-    DownloadInfo { oProject :: String
-                 , oBuild   :: Maybe String
+    DownloadInfo { oProject   :: String
+                 , oBuildNo   :: Maybe String
+                 , oBuildType :: Maybe String
                  } deriving (Show)
 
 data Options =
@@ -63,6 +64,11 @@ parseDownloadArgs projectCompleter = DownloadInfo
     <*> optional (argument str
         ( metavar "BUILD"
        <> help "Build number" ))
+    <*> optional (strOption
+        ( long "branch"
+       <> short 'b'
+       <> metavar "BUILDTYPE"
+       <> help "Build type" ))
 
 parseRunArgs :: Completer -> Parser String
 parseRunArgs projectCompleter = argument str
